@@ -1,7 +1,11 @@
 package com.booking.demo.run;
 
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import java.time.LocalDateTime;
@@ -13,86 +17,30 @@ import java.util.Optional;
 @Repository
 public class RunRepository {
 
-    private List<Run> runs = new ArrayList<>();
-        //obtenir
-        List<Run> findAll(){
-            return runs;
-        }
-       Optional<Run> FindById(Integer id){
-            return runs.stream()
-                    .filter(run -> run.id == id)
-                    .findFirst();
+private static final Logger log = LoggerFactory.getLogger(RunRepository.class);
+private final JdbcClient  JdbcClient;
+
+public RunRepository(JdbcClient jdbcClient){
+    this.JdbcClient= jdbcClient;
+}
+
+public List<Run> FindAll(){
+ return    JdbcClient.sql("SELECT * FROM Run")
+            .query(Run.class)
+            .list();
+}
+public Optional<Run> findById(Integer id){
+    return JdbcClient.sql("SELECT * FROM Run WHERE id = :id")
+            .param("id",id)
+            .query(Run.class)
+            .optional();
+}
+public void create(Run run){
+        var updated = JdbcClient.sql("INSERT INTO Run (id,title,started_on,completed_on,miles,location) VALUES (?,?,?,?,?,?)")
+            .params (List.of(run.getTitle(),run.getTitle(),run.getStartedOn(),run.getCompletedOn(),run.getMiles(),run.getLocation().toString()))
+            .update();
+    Assert.state(updated ==1,"failed to create run" + run.getTitle());
+}
 
 
-        }
-        //creer
-        void Create(Run run){
-            runs.add(run);
-        }
-        //mettre a jour
-        void update(Run run , Integer id ){
-            Optional<Run> existingrun = FindById(id);
-            if(existingrun.isPresent())
-                runs.set(runs.indexOf(existingrun.get()),run);
-        }
-
-        //suprimer
-        void delete(Integer id ){
-            runs.removeIf(run -> run.id.equals(id));
-        }
-
-
-
-
-        @PostConstruct
-    private void init(){
-            runs.add(new Run(
-               1,
-               "Monday Morning Run",
-               LocalDateTime.now(),
-               LocalDateTime.now().plus(30, ChronoUnit.MINUTES),
-               3,
-               Location.OUTDOOR
-            ));
-
-            runs.add(new Run(
-                    2,
-                    "Wednesday Evening Run",
-                    LocalDateTime.now(),
-                    LocalDateTime.now().plus(30, ChronoUnit.MINUTES),
-                    3,
-                    Location.OUTDOOR
-            ));
-
-
-            runs.add(new Run(
-                    3,
-                    "Friday Morning Run",
-                    LocalDateTime.now(),
-                    LocalDateTime.now().plus(30, ChronoUnit.MINUTES),
-                    3,
-                    Location.OUTDOOR
-            ));
-
-
-            runs.add(new Run(
-                    4,
-                    "Sunday Afternoon Run",
-                    LocalDateTime.now(),
-                    LocalDateTime.now().plus(30, ChronoUnit.MINUTES),
-                    3,
-                    Location.OUTDOOR
-            ));
-
-            runs.add(new Run(
-                    5,
-                    "Tuesday Morning Run",
-                    LocalDateTime.now(),
-                    LocalDateTime.now().plus(30, ChronoUnit.MINUTES),
-                    3,
-                    Location.OUTDOOR
-            ));
-
-
-        }
 }
