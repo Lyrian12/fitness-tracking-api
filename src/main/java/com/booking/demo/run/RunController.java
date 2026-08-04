@@ -1,5 +1,6 @@
 package com.booking.demo.run;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -36,7 +37,7 @@ List<Run> findAll(){
 //post {cree de nouvelles instances}
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping()
-    void  create (@RequestBody  Run run){
+    void  create (@Valid @RequestBody  Run run){
         runRepository.Create(run);
     }
 
